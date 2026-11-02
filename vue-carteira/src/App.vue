@@ -1,4 +1,10 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
+
+onMounted(async()=>{
+  await exibirDadosAPI();
+})
+
 import { UseCarteira } from '@/composable/UseCarteira';
 
 const { 
@@ -11,9 +17,11 @@ const {
   moedaBR, 
   totalGastos,
   totalRendas,
-  totalSaldo
+  totalSaldo,exibirDadosAPI
 } = UseCarteira();
-</script>
+
+
+ </script>
 
 <template>
   <section id="main">

@@ -1,4 +1,18 @@
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
+import axios from 'axios';
+
+
+const url='http://localhost:3000/operacoes';
+
+async function getDadosApi(){
+  axios.get("http://localhost:8000/api/users")
+  .then((res) => {
+          console.log(res.data)
+  })
+  .catch((error) => {
+          console.log(error);
+  });
+}
 
 interface Formulario {
   valor: number | null;
@@ -80,6 +94,10 @@ const moedaBR = (valor: number): string => {
   });
 };
 
+ const exibirDadosAPI = async () =>{
+  const response = await axios.get("https://backcarteira.onrender.com/operacoes")
+  operations.value = response.data
+ }
 export function UseCarteira() {
   return { 
     formulario, 
@@ -92,6 +110,6 @@ export function UseCarteira() {
     moedaBR,
     totalGastos,
     totalRendas,
-    totalSaldo
+    totalSaldo,exibirDadosAPI
   };
 }
