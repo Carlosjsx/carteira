@@ -10,14 +10,13 @@ import { UseCarteira } from '@/composable/UseCarteira';
 const { 
   formulario, 
   operations, 
-  addOperacao, 
-  removerOperacao, 
+  adicionarDadosAPI, 
   aviso, 
   mensagemAviso, 
   moedaBR, 
   totalGastos,
   totalRendas,
-  totalSaldo,exibirDadosAPI
+  totalSaldo,exibirDadosAPI,deletarDadosAPI
 } = UseCarteira();
 
 
@@ -43,7 +42,7 @@ const {
       </div>
     </div>
 
-    <form class="form" @submit.prevent="addOperacao">
+    <form class="form" @submit.prevent="adicionarDadosAPI">
       <select v-model="formulario.tipoEvento">
         <option disabled value="">Escolha o tipo</option>
         <option value="gasto">gasto</option>
@@ -60,7 +59,7 @@ const {
 <li v-for="op in operations" :key="op.id" :class="op.tipoEvento === 'gasto' ? 'tipo__gastos' : 'tipo__rendas'">
   <p>
     {{ op.descricao }} - {{ moedaBR(Number(op.valor)) }} - {{ op.tipoEvento }} 
-    <button @click="removerOperacao(op.id)" class="btn-delete">x</button>
+    <button @click="deletarDadosAPI(op.id)" class="btn-delete">x</button>
   </p>
 </li>
     </ul>

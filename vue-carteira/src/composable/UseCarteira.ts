@@ -1,21 +1,8 @@
-import { ref, computed, onMounted } from "vue";
+import { ref, computed } from "vue";
 import axios from 'axios';
 
-
-const url='http://localhost:3000/operacoes';
-
-async function getDadosApi(){
-  axios.get("http://localhost:8000/api/users")
-  .then((res) => {
-          console.log(res.data)
-  })
-  .catch((error) => {
-          console.log(error);
-  });
-}
-
 interface Formulario {
-  valor: number | null;
+  valor: number | null; 
   descricao: string;
   tipoEvento: string;
 }
@@ -38,78 +25,87 @@ const operations = ref<Operation[]>([]);
 function avisando(msg: string): void {
   mensagemAviso.value = msg;
   aviso.value = true;
-
-  setTimeout(() => {
-    aviso.value = false;
-  }, 1200);
+  setTimeout(() => { aviso.value = false; }, 1200);
 }
 
-function addOperacao(): void {
-  if (!formulario.value.tipoEvento || formulario.value.valor === null || !formulario.value.descricao) {
-    avisando("Preencha todos os campos!");
-    return;
-  }
 
-  operations.value.push({
-    id: Date.now(),
-    tipoEvento: formulario.value.tipoEvento,
-    valor: Number(formulario.value.valor),
-    descricao: formulario.value.descricao
-  });
-
-  formulario.value = {
-    valor: null,
-    descricao: '',
-    tipoEvento: ''
-  };
-
-  avisando("Cadastrado com sucesso!");
-}
-
-// Função para remover a operação pelo ID
-function removerOperacao(id: number): void {
-  operations.value = operations.value.filter(op => op.id !== id);
-  avisando("Operação removida!");
-}
-
-const totalGastos = computed(()=>{
+const totalGastos = computed(() => {
   return operations.value
     .filter(op => op.tipoEvento === "gasto")
     .reduce((acumulador, op) => acumulador + Number(op.valor), 0);
 })
 
-const totalRendas = computed(()=>{
+const totalRendas = computed(() => {
   return operations.value
     .filter(op => op.tipoEvento === "renda")
     .reduce((acumulador, op) => acumulador + Number(op.valor), 0);
 })
-const totalSaldo = computed(()=>{
-  return totalRendas.value - totalGastos.value
-})
+
+const totalSaldo = computed(() => totalRendas.value - totalGastos.value)
 
 const moedaBR = (valor: number): string => {
-  return valor.toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
+  const v = isNaN(valor) ? 0 : valor;
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
- const exibirDadosAPI = async () =>{
-  const response = await axios.get("https://backcarteira.onrender.com/operacoes")
-  operations.value = response.data
- }
+// --- CORREÇÃO 1: Adicionar ---
+const adicionarDadosAPI = async () => {
+  if (formulario.value.valor === null || !formulario.value.tipoEvento.trim() || !formulario.value.descricao.trim()) {
+    avisando("Campos obrigatórios");
+    return;
+  }
+
+  const valorNumerico = Number(formulario.value.valor);
+  
+  await axios.post("https://backcarteira.onrender.com/operacoes", {
+    tipoEvento: formulario.value.tipoEvento,
+    valor: valorNumerico,
+    descricao: formulario.value.descricao,
+    categoria: "geral", 
+    dataEvento: new Date().toISOString()
+  });
+
+  operations.value.push({
+    id: Date.now(),
+    tipoEvento: formulario.value.tipoEvento,
+    valor: valorNumerico,
+    descricao: formulario.value.descricao
+  });
+
+  formulario.value = { valor: null, descricao: '', tipoEvento: '' };
+  avisando("Cadastrado com sucesso!");
+}
+
+//Exibir
+const exibirDadosAPI = async () => {
+  const response = await axios.get("https://backcarteira.onrender.com/operacoes");
+  
+  operations.value = response.data.map((op: any) => ({
+    id: op.id,
+    tipoEvento: op.tipoEvento,
+    descricao: op.descricao,
+    valor: Number(op.valor)
+  }));
+}
+
+const deletarDadosAPI = async (id: number) => {
+  await axios.delete(`https://backcarteira.onrender.com/operacoes/${id}`);
+  operations.value = operations.value.filter(op => op.id !== id);
+}
+
 export function UseCarteira() {
-  return { 
-    formulario, 
-    operations, 
-    addOperacao, 
-    removerOperacao, 
-    avisando, 
-    aviso, 
-    mensagemAviso, 
+  return {
+    formulario,
+    operations,
+    adicionarDadosAPI,
+    avisando,
+    aviso,
+    mensagemAviso,
     moedaBR,
     totalGastos,
     totalRendas,
-    totalSaldo,exibirDadosAPI
+    totalSaldo, 
+    exibirDadosAPI, 
+    deletarDadosAPI
   };
 }
